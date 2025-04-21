@@ -1,0 +1,14 @@
+package org.example.model.enums;
+
+public enum TipoDocumento {
+    CERTIDAO_NASCIMENTO,
+    RG,
+    CPF,
+    COMPROVANTE_RESIDENCIA,
+    HISTORICO_ESCOLAR,
+    CARTEIRA_VACINACAO,
+    FOTO,
+    LAUDO_MEDICO,
+    TRADUCAO_JURAMENTADA,
+    QUITACAO_DEBITOS
+}

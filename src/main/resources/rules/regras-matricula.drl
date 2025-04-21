@@ -1,0 +1,98 @@
+package rules;
+
+import org.example.model.Matricula;
+import org.example.model.Documento;
+import org.example.model.enums.StatusMatricula;
+import org.example.model.enums.TipoDocumento;
+import org.example.model.Turma;
+
+rule "Validar se o aluno possui idade igual ou superior à idade mínima exigida para a turma pretendida."
+    @regraDeNegocio("BR-01")
+    when
+        $Matricula : Matricula(aluno.getIdade() < turma.getIdadeMinima())
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não possui idade para matricular na turma " + $Matricula.getTurma().getCodigo());
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se há vagas disponíveis na turma pretendida."
+    @regraDeNegocio("BR-02")
+    when
+        $Matricula : Matricula(turma.vagasDisponiveis <= 0)
+    then
+        System.out.println("A turma " + $Matricula.getTurma().getCodigo() + " não possui vagas disponíveis.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se o aluno não apresentou CPF, RG ou Certidão de Nascimento"
+    @regraDeNegocio("BR-03")
+    when
+        $Matricula : Matricula()
+        not(Documento(tipo == TipoDocumento.RG, validado == true) from $Matricula.documentosApresentados)
+        and
+        not(Documento(tipo == TipoDocumento.CPF, validado == true) from $Matricula.documentosApresentados)
+        and
+        not(Documento(tipo == TipoDocumento.CERTIDAO_NASCIMENTO, validado == true)
+            from $Matricula.documentosApresentados)
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não apresentou CPF, RG ou Certidão de Nascimento.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se o aluno apresentou comprovante de residência"
+    @regraDeNegocio("BR-03")
+    when
+        $Matricula : Matricula()
+        not(Documento(tipo == TipoDocumento.COMPROVANTE_RESIDENCIA, validado == true) from $Matricula.documentosApresentados)
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não apresentou comprovante de residência.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se o aluno apresentou carteira de vacinação"
+    @regraDeNegocio("BR-03")
+    when
+        $Matricula : Matricula()
+        not(Documento(tipo == TipoDocumento.CARTEIRA_VACINACAO, validado == true) from $Matricula.documentosApresentados)
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não apresentou carteira de vacinação.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se o aluno é transferido e, com isso, exigir histórico escolar"
+    @regraDeNegocio("BR-04")
+    when
+        $Matricula : Matricula(transferido == true)
+        not(Documento(tipo == TipoDocumento.HISTORICO_ESCOLAR, validado == true) from $Matricula.documentosApresentados)
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não apresentou histórico escolar.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se o aluno é transferido e, com isso, exigir documento de quitação de débitos"
+    @regraDeNegocio("BR-04")
+    when
+        $Matricula : Matricula(transferido == true)
+        not(Documento(tipo == TipoDocumento.QUITACAO_DEBITOS, validado == true) from $Matricula.documentosApresentados)
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não apresentou histórico de quitação de débitos.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
+
+rule "Verificar se o aluno possui deficiência e, com isso, exigir laudo médico"
+    @regraDeNegocio("BR-07")
+    when
+        $Matricula : Matricula(aluno.possuiDeficiencia == true)
+        not(Documento(tipo == TipoDocumento.LAUDO_MEDICO, validado == true) from $Matricula.documentosApresentados)
+    then
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não apresentou laudo médico.");
+        System.out.println("O aluno " + $Matricula.getAluno().getNome() + " não pode ser matriculado.");
+        $Matricula.setStatus(StatusMatricula.INAPTO);
+end
